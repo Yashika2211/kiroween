@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "osv": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-osv", "mcp-osv"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["query_vulns", "get_vuln"]
+    }
+  }
+}
