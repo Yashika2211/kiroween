@@ -343,7 +343,7 @@ class Resurrector:
                             continue
                     elif task.kind is TaskKind.LLM:
                         if last is not None and last.ok:
-                            await self._set(task, TaskStatus.SKIPPED, "not needed: tests pass")
+                            await self._set(task, TaskStatus.SKIPPED, "tests already pass")
                             continue
                         note = await self._llm_loop(
                             task, last or RunResult(status=RunStatus.SKIPPED)
