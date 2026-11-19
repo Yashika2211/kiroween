@@ -56,7 +56,7 @@ def get_settings() -> Settings:
     return Settings(
         github_token=os.environ.get("GITHUB_TOKEN") or None,
         anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY") or None,
-        llm_model=os.environ.get("NECRO_LLM_MODEL", "claude-sonnet-5-5"),
+        llm_model=os.environ.get("NECRO_LLM_MODEL", "claude-opus-5-5"),
         db_path=Path(os.environ.get("NECRO_DB_PATH", root / "data" / "necromancer.sqlite3")),
         workspace_dir=Path(os.environ.get("NECRO_WORKSPACE_DIR", root / "data" / "workspaces")),
         max_lines=_int("NECRO_MAX_LINES", 5000),
