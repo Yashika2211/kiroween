@@ -1,0 +1,116 @@
+from collections.abc import AsyncIterator
+from dataclasses import replace
+from pathlib import Path
+from typing import Any
+
+import httpx
+import pytest
+
+from necromancer import jobs as jobs_mod
+from necromancer.api.app import create_app
+from necromancer.config import get_settings
+from necromancer.db import JobStore
+from necromancer.errors import RepoTooLarge
+from necromancer.jobs import JobManager
+from necromancer.models import ResurrectionResult, RunResult, RunStatus
+from necromancer.rise.publisher import Published
+from necromancer.sandbox.runner import SandboxConfig, SandboxRunner
+from tests.factories import certificate
+
+
+@pytest.fixture
+async def client(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> AsyncIterator[tuple[httpx.AsyncClient, JobManager]]:
+    settings = replace(
+        get_settings(),
+        db_path=tmp_path / "db.sqlite3",
+        workspace_dir=tmp_path / "ws",
+        github_token=None,
+        anthropic_api_key=None,
+    )
+
+    async def fake_autopsy(self: Any, job_id: str, ref: Any, ws: Any, emit: Any) -> Any:
+        await emit("step", {"key": "exhume", "state": "done"})
+        if ref.name == "huge":
+            raise RepoTooLarge("too big")
+        ws.prepare()
+        ws.before.mkdir()
+        return certificate()
+
+    async def fake_resurrect(self: Any) -> ResurrectionResult:
+        await self.emit("log", {"message": "rising"})
+        return ResurrectionResult(tests=RunResult(status=RunStatus.PASSED, tail="1 passed"))
+
+    async def fake_publish(**kw: Any) -> Published:
+        return Published(pr_url=None, branch="b", fork=None, patch="--- a\n+++ b\n")
+
+    monkeypatch.setattr(jobs_mod.AutopsyService, "run", fake_autopsy)
+    monkeypatch.setattr(jobs_mod.Resurrector, "run", fake_resurrect)
+    monkeypatch.setattr(jobs_mod, "publish", fake_publish)
+
+    manager = JobManager(
+        settings, JobStore(settings.db_path), sandbox=SandboxRunner(SandboxConfig(enabled=False))
+    )
+    app = create_app(settings, manager)
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+            yield c, manager
+
+
+async def test_health(client: tuple[httpx.AsyncClient, JobManager]) -> None:
+    c, _ = client
+    body = (await c.get("/api/health")).json()
+    assert body["ok"] is True and body["docker"] is False and body["llm"] is False
+
+
+async def test_summon_validates_url(client: tuple[httpx.AsyncClient, JobManager]) -> None:
+    c, _ = client
+    r = await c.post("/api/summon", json={"url": "https://gitlab.com/a/b"})
+    assert r.status_code == 422 and r.json()["code"] == "invalid_repo_url"
+
+
+async def test_full_lifecycle(client: tuple[httpx.AsyncClient, JobManager]) -> None:
+    c, manager = client
+    r = await c.post("/api/summon", json={"url": "https://github.com/someone/deadrepo"})
+    assert r.status_code == 202
+    job_id = r.json()["id"]
+    await manager.wait(job_id)
+
+    job = (await c.get(f"/api/jobs/{job_id}")).json()
+    assert job["status"] == "autopsied"
+    assert job["certificate"]["decay_score"] == 78
+    assert job["plan"]["tasks"]
+
+    graves = (await c.get("/api/jobs")).json()
+    assert graves[0]["repo"] == "someone/deadrepo" and graves[0]["born"] == 2011
+
+    r = await c.post(f"/api/jobs/{job_id}/resurrect")
+    assert r.status_code == 202
+    await manager.wait(job_id)
+    job = (await c.get(f"/api/jobs/{job_id}")).json()
+    assert job["status"] == "risen"
+    assert job["result"]["patch"] is None  # not inlined
+    patch = await c.get(f"/api/jobs/{job_id}/patch")
+    assert patch.status_code == 200 and patch.text.startswith("--- a")
+
+    # the event stream replays everything that happened, then ends
+    async with c.stream("GET", f"/api/jobs/{job_id}/events") as stream:
+        text = "".join([chunk async for chunk in stream.aiter_text()])
+    for event in ("status", "step", "certificate", "plan", "log", "result", "end"):
+        assert f"event: {event}" in text
+
+    r = await c.post(f"/api/jobs/{job_id}/resurrect")
+    assert r.status_code == 409
+
+    assert (await c.delete(f"/api/jobs/{job_id}")).status_code == 204
+    assert (await c.get(f"/api/jobs/{job_id}")).status_code == 404
+
+
+async def test_rejected_repo(client: tuple[httpx.AsyncClient, JobManager]) -> None:
+    c, manager = client
+    job_id = (await c.post("/api/summon", json={"url": "someone/huge"})).json()["id"]
+    await manager.wait(job_id)
+    job = (await c.get(f"/api/jobs/{job_id}")).json()
+    assert job["status"] == "rejected" and job["error_code"] == "repo_too_large"
