@@ -15,6 +15,7 @@ from pathlib import Path
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
 
+from necromancer.pyparse import parse_quietly
 from necromancer.workspace import read_text, safe_join
 
 _REQ_FILE_GLOBS = ["requirements*.txt", "requirements/*.txt", "*requirements.txt", "reqs/*.txt"]
@@ -125,11 +126,11 @@ def parse_setup_py(path: Path, root: Path) -> list[DeclaredDependency]:
     after a crude print-statement rewrite so we can still read the literal lists."""
     source = read_text(path)
     try:
-        tree = ast.parse(source)
+        tree = parse_quietly(source)
     except SyntaxError:
         patched = re.sub(r"^(\s*)print\s+(.+)$", r"\1print(\2)", source, flags=re.M)
         try:
-            tree = ast.parse(patched)
+            tree = parse_quietly(patched)
         except SyntaxError:
             return []
     assignments: dict[str, ast.AST] = {}

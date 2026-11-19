@@ -14,6 +14,7 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
+from necromancer.pyparse import parse_quietly
 from necromancer.workspace import iter_python_files, read_text
 
 SMOKE_PATH = "tests/test_necromancer_smoke.py"
@@ -141,7 +142,7 @@ def _looks_pure(fn: ast.FunctionDef) -> bool:
 
 def find_pure_functions(source: str, module: str) -> list[PureFunction]:
     try:
-        tree = ast.parse(source)
+        tree = parse_quietly(source)
     except SyntaxError:
         return []
     found: list[PureFunction] = []
@@ -168,7 +169,7 @@ def find_pure_functions(source: str, module: str) -> list[PureFunction]:
 
 def _has_relative_imports(source: str) -> bool:
     try:
-        tree = ast.parse(source)
+        tree = parse_quietly(source)
     except SyntaxError:
         return True
     return any(isinstance(n, ast.ImportFrom) and n.level for n in ast.walk(tree))

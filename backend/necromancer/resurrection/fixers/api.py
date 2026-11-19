@@ -11,6 +11,7 @@ import re
 from collections.abc import Callable
 
 from necromancer.knowledge import API_RULES, UNITTEST_ALIASES
+from necromancer.pyparse import parse_quietly
 
 _ABC_NAMES = {
     "Mapping",
@@ -47,7 +48,7 @@ def ensure_import(source: str, statement: str) -> str:
     if any(line.strip() == statement for line in lines):
         return source
     try:
-        tree = ast.parse(source)
+        tree = parse_quietly(source)
     except SyntaxError:
         return source
     insert_at = 0
@@ -196,7 +197,7 @@ FIXERS: list[tuple[str, Callable[[str], str]]] = [
 
 def _parses(source: str) -> bool:
     try:
-        ast.parse(source)
+        parse_quietly(source)
     except SyntaxError:
         return False
     return True

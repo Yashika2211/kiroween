@@ -7,11 +7,12 @@ written, and it is only ever executed inside the sandbox.
 
 from __future__ import annotations
 
-import ast
 import re
 from dataclasses import dataclass
 
 import anthropic
+
+from necromancer.pyparse import parse_quietly
 
 SYSTEM_PROMPT = """You repair abandoned Python projects so they run on Python 3.12.
 
@@ -107,7 +108,7 @@ class LLMFixer:
         if code is None or code == source:
             return None
         try:
-            ast.parse(code)
+            parse_quietly(code)
         except SyntaxError:
             return None
         return LLMFix(path=path, new_source=code, explanation=explanation)

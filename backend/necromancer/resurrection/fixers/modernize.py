@@ -5,17 +5,18 @@ pyupgrade only tokenizes and parses; it never imports the code it rewrites.
 
 from __future__ import annotations
 
-import ast
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+from necromancer.pyparse import parse_quietly
+
 
 def pyupgrade(source: str, *, timeout: float = 30.0) -> str:
     """Return the pyupgrade'd source, or the input unchanged if it can't be processed."""
     try:
-        ast.parse(source)
+        parse_quietly(source)
     except SyntaxError:
         return source
     with tempfile.TemporaryDirectory(prefix="necro-pyupgrade-") as tmp:
@@ -32,7 +33,7 @@ def pyupgrade(source: str, *, timeout: float = 30.0) -> str:
             return source
         result = path.read_text(encoding="utf-8")
     try:
-        ast.parse(result)
+        parse_quietly(result)
     except SyntaxError:
         return source
     return result
