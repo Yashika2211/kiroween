@@ -86,7 +86,7 @@ def classify(cert: DeathCertificate, *, llm_enabled: bool = True) -> list[Proble
             strategy="Run `pyupgrade --py312-plus` over every module after the syntax pass.",
             files=idiom_files,
             detail=[
-                f"{len(idiom_files)} file{'' if len(idiom_files) == 1 else 's'} use removed builtins"
+                f"{len(idiom_files)} {'file uses' if len(idiom_files) == 1 else 'files use'} removed builtins"
             ]
             if idiom_files
             else [],

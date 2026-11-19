@@ -20,7 +20,7 @@ Files: `deadrepo/core.py`
 
 Run `pyupgrade --py312-plus` over every module after the syntax pass.
 
-- 1 file use removed builtins
+- 1 file uses removed builtins
 
 Files: `deadrepo/core.py`
 
