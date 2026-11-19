@@ -39,7 +39,7 @@ packages = ["necromancer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-norecursedirs = ["fixtures"]
+norecursedirs = ["fixtures", ".*", "*.egg", "build", "dist", "node_modules", "venv"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = ["docker: needs a running Docker daemon", "network: hits the real internet"]
