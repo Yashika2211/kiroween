@@ -55,3 +55,5 @@ ignore = ["S101", "S603", "S607", "RUF001", "ASYNC109", "ASYNC240", "SIM108"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B011"]
+# /tmp paths here are tmpfs mounts inside the sandbox container, not on the host.
+"necromancer/sandbox/**" = ["S108"]
