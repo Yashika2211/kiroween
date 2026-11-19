@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run backend tests on save",
+  "description": "When a backend Python file is saved, run the matching test module and report failures.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["backend/necromancer/**/*.py", "backend/tests/**/*.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A backend Python file was just saved. Run `cd backend && uv run pytest -q -x` (narrow to the matching tests/ module if one exists). If anything fails, explain the failure and propose a minimal fix. Do not change tests to make them pass unless the test is wrong."
+  }
+}
