@@ -42,10 +42,10 @@ HARDENING_FLAGS = [
 INSTALL_SCRIPT = r"""
 set -u
 export PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 PIP_ROOT_USER_ACTION=ignore
-[ -n "$(ls -A /src 2>/dev/null)" ] || {
+[ -n "$(ls -A /src 2>/dev/null)" ] || {{
   echo "sandbox: /src is empty; is the workspace directory shared with the Docker VM?"
   exit 91
-}
+}}
 echo "--- python -m venv /venv ($(python -V))"
 python -m venv /venv
 /venv/bin/pip install -q pytest hypothesis || exit 90
@@ -66,10 +66,10 @@ exit $status
 
 TEST_SCRIPT = r"""
 set -u
-[ -n "$(ls -A /src 2>/dev/null)" ] || {
+[ -n "$(ls -A /src 2>/dev/null)" ] || {{
   echo "sandbox: /src is empty; is the workspace directory shared with the Docker VM?"
   exit 91
-}
+}}
 rm -rf /tmp/run && cp -r /src /tmp/run && cd /tmp/run
 export PYTHONPATH=/tmp/run PYTHONDONTWRITEBYTECODE=1 HYPOTHESIS_NO_TRACEBACK_TRIM=1
 /venv/bin/python -m pytest -q -x --no-header -p no:cacheprovider \
