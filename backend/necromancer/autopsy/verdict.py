@@ -19,7 +19,11 @@ from necromancer.models import (
 
 
 def _plural(n: int, word: str) -> str:
-    return f"{n} {word}{'' if n == 1 else 's'}"
+    if n == 1:
+        return f"{n} {word}"
+    if word.endswith("y") and word[-2:-1] not in "aeiou":
+        return f"{n} {word[:-1]}ies"
+    return f"{n} {word}s"
 
 
 def write_verdict(
@@ -50,8 +54,8 @@ def write_verdict(
 
     if unparseable and (top in {"syntax", "markers", None} or not install_failed):
         cause = (
-            f"Acute Python 2 syndrome: {_plural(len(unparseable), 'file')} no longer parse on "
-            "Python 3.12"
+            f"Acute Python 2 syndrome: {_plural(len(unparseable), 'file')} "
+            f"{'fails' if len(unparseable) == 1 else 'fail'} to parse on Python 3.12"
         )
         if syntax:
             kinds = sorted({m.kind.replace("_", " ") for m in syntax})[:3]
@@ -68,7 +72,8 @@ def write_verdict(
             "dependencies."
         )
     elif dead:
-        cause = f"Starved: depends on {', '.join(d.name for d in dead[:3])}, which no longer exist."
+        verb = "no longer exists" if len(dead) == 1 else "no longer exist"
+        cause = f"Starved: depends on {', '.join(d.name for d in dead[:3])}, which {verb}."
     elif stdlib:
         mods = sorted(
             {m.excerpt.split()[1].split(".")[0] for m in stdlib if len(m.excerpt.split()) > 1}

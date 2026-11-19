@@ -53,7 +53,7 @@ def test_python2_syntax_is_primary_cause() -> None:
             )
         ],
     )
-    assert cause.startswith("Acute Python 2 syndrome: 1 file no longer parse")
+    assert cause.startswith("Acute Python 2 syndrome: 1 file fails to parse")
     assert "print statement" in cause
     assert any("No commits for" in f for f in factors)
 
@@ -97,3 +97,13 @@ def test_archived_but_healthy() -> None:
     cause, factors = verdict(archived=True)
     assert cause.startswith("Abandoned")
     assert "Repository is archived." in factors
+
+
+def test_pluralisation() -> None:
+    cause, factors = verdict(
+        vulnerabilities=[
+            Vulnerability(id=str(i), package="p", severity=Severity.HIGH) for i in range(4)
+        ]
+    )
+    assert "4 high-severity vulnerabilities" in cause
+    assert any("4 known vulnerabilities" in f for f in factors)
