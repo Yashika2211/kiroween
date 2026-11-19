@@ -113,7 +113,9 @@ class GitHubClient:
 
     # ------------------------------------------------------------------ writes
 
-    async def ensure_fork(self, ref: RepoRef, *, poll_seconds: float = 2.0, attempts: int = 30) -> RepoRef:
+    async def ensure_fork(
+        self, ref: RepoRef, *, poll_seconds: float = 2.0, attempts: int = 30
+    ) -> RepoRef:
         """Fork `ref` into the token owner's account and wait until it is ready."""
         login = await self.whoami()
         if login.lower() == ref.owner.lower():
