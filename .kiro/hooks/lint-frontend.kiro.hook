@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Typecheck frontend on save",
+  "description": "Run the TypeScript compiler when a frontend file is saved.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["frontend/**/*.ts", "frontend/**/*.tsx"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run `cd frontend && npx tsc --noEmit`. Report any type errors with file:line and fix them without using `any`."
+  }
+}
