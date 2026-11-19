@@ -61,3 +61,24 @@ def test_plan_is_deterministic_and_matches_snapshots() -> None:
 def test_group_by_file() -> None:
     grouped = group_by_file(certificate())
     assert grouped["deadrepo/core.py"] == ["dict_iteritems", "print_statement", "removed_module"]
+
+
+def test_python2_builtins_alone_trigger_full_conversion() -> None:
+    from necromancer.models import FileHealth, Marker, MarkerCategory
+
+    cert = certificate(
+        files=[FileHealth(path="pyfin/pyfin.py", lines=10, parses=True)],
+        markers=[
+            Marker(
+                file="pyfin/pyfin.py",
+                line=3,
+                kind="xrange",
+                category=MarkerCategory.BUILTIN,
+                excerpt="xrange(n)",
+            )
+        ],
+    )
+    plan = build_plan(cert)
+    assert plan.tasks[0].title.startswith("Rewrite Python 2 syntax")
+    assert plan.tasks[0].files == ["pyfin/pyfin.py"]
+    assert "relies on Python 2 builtins" in plan.design_md

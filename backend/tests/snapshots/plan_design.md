@@ -13,7 +13,7 @@ Deterministic fixes run first, in order, each on the output of the previous one.
 Run the 2to3 fixers (via `fissix`, a maintained lib2to3 fork) on every module. The codebase is Python 2, so Python 2 semantics (map() returning a list, dict views, integer division of ints) apply even in files that happen to parse on Python 3. This is a static text transform; no repository code runs.
 
 - 1 files fail to parse: `deadrepo/core.py`
-- constructs: print statement
+- constructs: dict iteritems, print statement
 
 Files: `deadrepo/__init__.py`, `deadrepo/core.py`, `tests/test_core.py`
 

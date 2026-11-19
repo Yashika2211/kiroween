@@ -17,6 +17,22 @@ from necromancer.models import (
     TaskKind,
 )
 
+# Builtins that only exist in Python 2: their presence means the whole codebase was written
+# with Python 2 semantics, even if every file happens to parse on Python 3.
+PY2_ONLY_BUILTINS = {
+    "dict_iteritems",
+    "dict_itervalues",
+    "dict_iterkeys",
+    "dict_has_key",
+    "xrange",
+    "raw_input",
+    "unichr",
+    "execfile",
+    "iterator_next",
+    "sys_maxint",
+    "getcwdu",
+}
+
 
 @dataclass
 class ProblemClass:
@@ -44,13 +60,15 @@ def classify(cert: DeathCertificate, *, llm_enabled: bool = True) -> list[Proble
         return str(n)
 
     unparseable = [f.path for f in cert.files if not f.parses]
-    if unparseable:
+    py2_builtins = sorted({m.kind for m in cert.markers if m.kind in PY2_ONLY_BUILTINS})
+    if unparseable or py2_builtins:
         kinds = sorted(
             {
                 m.kind
                 for m in cert.markers
                 if m.category is MarkerCategory.SYNTAX and m.file in unparseable
             }
+            | set(py2_builtins)
         )
         classes.append(
             ProblemClass(
@@ -68,10 +86,14 @@ def classify(cert: DeathCertificate, *, llm_enabled: bool = True) -> list[Proble
                 "This is a static text transform; no repository code runs.",
                 files=sorted(f.path for f in cert.files),
                 detail=(
-                    [
-                        f"{len(unparseable)} files fail to parse: "
-                        + ", ".join(f"`{u}`" for u in unparseable[:8])
-                    ]
+                    (
+                        [
+                            f"{len(unparseable)} files fail to parse: "
+                            + ", ".join(f"`{u}`" for u in unparseable[:8])
+                        ]
+                        if unparseable
+                        else ["every file parses, but the code relies on Python 2 builtins"]
+                    )
                     + (
                         [f"constructs: {', '.join(k.replace('_', ' ') for k in kinds)}"]
                         if kinds
