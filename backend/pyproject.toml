@@ -50,6 +50,9 @@ line-length = 100
 target-version = "py312"
 extend-exclude = ["tests/fixtures"]
 
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC", "S"]
 ignore = ["S101", "S603", "S607", "RUF001", "ASYNC109", "ASYNC240", "SIM108"]
@@ -58,3 +61,6 @@ ignore = ["S101", "S603", "S607", "RUF001", "ASYNC109", "ASYNC240", "SIM108"]
 "tests/**" = ["S", "B011"]
 # /tmp paths here are tmpfs mounts inside the sandbox container, not on the host.
 "necromancer/sandbox/**" = ["S108"]
+# Markdown templates: long prose lines are clearer unwrapped.
+"necromancer/ritual/planner.py" = ["E501"]
+"necromancer/rise/pr_body.py" = ["E501"]
