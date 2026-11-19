@@ -62,12 +62,22 @@ def classify(cert: DeathCertificate, *, llm_enabled: bool = True) -> list[Proble
                     "WHEN any module is parsed with Python 3.12 THEN it SHALL NOT raise SyntaxError.",
                     "WHEN Python 2 constructs are rewritten THEN behaviour SHALL be preserved.",
                 ],
-                strategy="Run the 2to3 fixers (via `fissix`, a maintained lib2to3 fork) on the files "
-                "that fail to parse. This is a static text transform; no repository code runs.",
-                files=unparseable,
-                detail=[f"constructs: {', '.join(k.replace('_', ' ') for k in kinds)}"]
-                if kinds
-                else [],
+                strategy="Run the 2to3 fixers (via `fissix`, a maintained lib2to3 fork) on every module. "
+                "The codebase is Python 2, so Python 2 semantics (map() returning a list, dict views, "
+                "integer division of ints) apply even in files that happen to parse on Python 3. "
+                "This is a static text transform; no repository code runs.",
+                files=sorted(f.path for f in cert.files),
+                detail=(
+                    [
+                        f"{len(unparseable)} files fail to parse: "
+                        + ", ".join(f"`{u}`" for u in unparseable[:8])
+                    ]
+                    + (
+                        [f"constructs: {', '.join(k.replace('_', ' ') for k in kinds)}"]
+                        if kinds
+                        else []
+                    )
+                ),
             )
         )
 

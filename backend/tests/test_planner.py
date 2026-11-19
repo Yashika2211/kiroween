@@ -28,7 +28,7 @@ def test_task_order_follows_the_spec() -> None:
         TaskKind.LLM,
     ]
     assert [t.id for t in plan.tasks] == [str(i) for i in range(1, 9)]
-    assert plan.tasks[0].files == ["deadrepo/core.py"]
+    assert plan.tasks[0].files == ["deadrepo/__init__.py", "deadrepo/core.py", "tests/test_core.py"]
     assert all(t.requirement_ids for t in plan.tasks)
 
 

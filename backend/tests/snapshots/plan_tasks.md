@@ -1,7 +1,7 @@
 # Tasks: Resurrect someone/deadrepo
 
 - [ ] 1. Rewrite Python 2 syntax with 2to3 fixers (_Req 1_)
-  - files: `deadrepo/core.py`
+  - files: `deadrepo/__init__.py`, `deadrepo/core.py`, `tests/test_core.py`
 - [ ] 2. Modernise idioms with pyupgrade --py312-plus (_Req 2_)
   - files: `deadrepo/core.py`
 - [ ] 3. Replace removed stdlib modules and APIs (_Req 3_)
