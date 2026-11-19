@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Rescan vulnerabilities when requirements change",
+  "description": "When any requirements or pyproject file changes, query OSV through the mcp-osv server for every pinned dependency.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["**/requirements*.txt", "**/pyproject.toml", "demo-repos/**/setup.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A dependency manifest changed. For every pinned package==version in it, call the `query_vulns` tool from the `osv` MCP server. Summarise any vulnerabilities (id, severity, fixed version) as a table and suggest the smallest safe version bump."
+  }
+}
