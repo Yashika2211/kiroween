@@ -257,6 +257,14 @@ class Resurrector:
             rounds += 1
             install = await self._install()
             tests = await self._test()
+        if tests.ok and not install.ok:
+            last_line = next(
+                (ln.strip() for ln in reversed(install.tail.splitlines()) if ln.strip()), ""
+            )
+            await self.log(
+                "Tests pass when run from source, but installing the package itself still "
+                f"fails ({last_line[:160]}). This needs a manual look."
+            )
         return tests
 
     async def _llm_loop(self, task: PlanTask, last: RunResult) -> str:

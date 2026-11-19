@@ -221,3 +221,23 @@ async def test_without_docker_verify_is_skipped(setup: tuple[Workspace, DeathCer
     ).run()
     assert {t.kind: t.status for t in plan.tasks}[TaskKind.VERIFY] is TaskStatus.SKIPPED
     assert result.install and result.install.status is RunStatus.SKIPPED
+
+
+async def test_install_failure_with_passing_tests_is_reported(
+    setup: tuple[Workspace, DeathCertificate],
+) -> None:
+    ws, cert = setup
+    plan = build_plan(cert, llm_enabled=False)
+
+    class BrokenSetup(FakeSandbox):
+        async def install(self, *a: Any, **kw: Any) -> RunResult:
+            return RunResult(status=RunStatus.FAILED, tail="FileNotFoundError: README.rst\n")
+
+    result = await Resurrector(
+        job_id="job1",
+        workspace=ws,
+        certificate=cert,
+        plan=plan,  # type: ignore[arg-type]
+        sandbox=BrokenSetup([RunResult(status=RunStatus.PASSED)]),  # type: ignore[arg-type]
+    ).run()
+    assert any("README.rst" in n and "manual look" in n for n in result.notes)
