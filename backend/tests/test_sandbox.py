@@ -70,3 +70,11 @@ async def test_disabled_sandbox_skips() -> None:
     result = await runner.test("j", Path("."))
     assert result.status is RunStatus.SKIPPED
     assert "disabled" in result.reason
+
+
+def test_scripts_refuse_an_empty_source_mount(tmp_path: Path) -> None:
+    for args in (
+        build_test_args(CFG, "j", tmp_path),
+        build_install_args(CFG, "j", tmp_path, [], phase="install"),
+    ):
+        assert "exit 91" in args[-1]
