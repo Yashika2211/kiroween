@@ -78,3 +78,25 @@ def test_scripts_refuse_an_empty_source_mount(tmp_path: Path) -> None:
         build_install_args(CFG, "j", tmp_path, [], phase="install"),
     ):
         assert "exit 91" in args[-1]
+
+
+def test_scripts_skip_git_and_never_run_from_the_wrong_directory(tmp_path: Path) -> None:
+    for args in (
+        build_test_args(CFG, "j", tmp_path),
+        build_install_args(CFG, "j", tmp_path, [], phase="install"),
+    ):
+        script = args[-1]
+        assert "--exclude=./.git" in script
+        assert "exit 92" in script  # a failed copy must not fall through to pytest in /
+
+
+def test_rendered_scripts_are_valid_shell(tmp_path: Path) -> None:
+    import subprocess
+
+    for args in (
+        build_test_args(CFG, "j", tmp_path, ["tests/x.py"]),
+        build_install_args(CFG, "j", tmp_path, ["requirements.txt"], phase="install"),
+    ):
+        result = subprocess.run(["sh", "-n", "-c", args[-1]], capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        assert "\\\\\n" not in args[-1]  # no escaped backslash where a line continuation belongs

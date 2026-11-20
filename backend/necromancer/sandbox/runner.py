@@ -49,7 +49,10 @@ export PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 PIP_ROOT_USER_ACTION=ignor
 echo "--- python -m venv /venv ($(python -V))"
 python -m venv /venv
 /venv/bin/pip install -q pytest hypothesis || exit 90
-rm -rf /tmp/build && cp -r /src /tmp/build && cd /tmp/build
+# Copy without .git: tests never need it, and its files may be unreadable to this user.
+rm -rf /tmp/build && mkdir -p /tmp/build \
+  && tar -C /src --exclude=./.git -cf - . | tar -C /tmp/build -xf - \
+  && cd /tmp/build || {{ echo "sandbox: could not copy the repository"; exit 92; }}
 status=0
 for req in {requirements}; do
   if [ -f "$req" ]; then
@@ -70,7 +73,10 @@ set -u
   echo "sandbox: /src is empty; is the workspace directory shared with the Docker VM?"
   exit 91
 }}
-rm -rf /tmp/run && cp -r /src /tmp/run && cd /tmp/run
+# Copy without .git: tests never need it, and its files may be unreadable to this user.
+rm -rf /tmp/run && mkdir -p /tmp/run \
+  && tar -C /src --exclude=./.git -cf - . | tar -C /tmp/run -xf - \
+  && cd /tmp/run || {{ echo "sandbox: could not copy the repository"; exit 92; }}
 export PYTHONPATH=/tmp/run PYTHONDONTWRITEBYTECODE=1 HYPOTHESIS_NO_TRACEBACK_TRIM=1
 /venv/bin/python -m pytest -q -x --no-header -p no:cacheprovider \
   -W ignore::DeprecationWarning {targets}
