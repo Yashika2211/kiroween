@@ -7,6 +7,7 @@ import { CandleRow } from "@/components/CandleRow";
 import { DiffViewer } from "@/components/DiffViewer";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { PlanTabs } from "@/components/PlanTabs";
+import { PrBody } from "@/components/PrBody";
 import { RiseScene } from "@/components/RiseScene";
 import { RitualLog } from "@/components/RitualLog";
 import { ApiError, api } from "@/lib/api";
@@ -61,6 +62,7 @@ export default function RitualPage({ params }: { params: { id: string } }) {
       )}
 
       {view.status === "risen" && <RiseScene job={job} />}
+      {view.status === "risen" && job.result?.pr_body && !job.result.pr_url && <PrBody body={job.result.pr_body} />}
 
       {view.status === "failed" && (
         <div role="alert" className="mx-auto mt-8 max-w-2xl rounded-lg border border-blood/50 bg-blood/10 p-5 text-center">
