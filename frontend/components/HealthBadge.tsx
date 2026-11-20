@@ -32,7 +32,7 @@ export function HealthBadge() {
     { on: health.github, label: "PRs" },
   ];
   return (
-    <ul className="flex gap-2 text-xs" aria-label="Backend capabilities">
+    <ul className="hidden gap-2 text-xs sm:flex" aria-label="Backend capabilities">
       {powers.map((p) => (
         <li
           key={p.label}

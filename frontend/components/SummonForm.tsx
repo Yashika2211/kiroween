@@ -71,7 +71,7 @@ export function SummonForm() {
           {busy ? "Summoning…" : "Summon"}
         </button>
       </div>
-      <p id={hintId} className="mt-3 text-sm text-bone-dim">
+      <p id={hintId} className="mt-3 break-words text-sm text-bone-dim">
         Python repositories up to 5,000 lines. Try a known corpse:{" "}
         {EXAMPLES.map((ex, i) => (
           <span key={ex}>

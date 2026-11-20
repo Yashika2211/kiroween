@@ -6,10 +6,10 @@ export default function HomePage() {
     <>
       <section className="pt-10 text-center sm:pt-16">
         <p className="label">Kiroween 2026 · Resurrection</p>
-        <h1 className="mt-4 font-display text-6xl leading-none text-bone sm:text-8xl">
+        <h1 className="mt-4 font-display text-5xl leading-none text-bone sm:text-7xl md:text-8xl">
           Raise the <span className="text-ecto drop-shadow-[0_0_24px_rgba(124,245,165,0.45)]">dead</span> code
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-bone-dim">
+        <p className="mx-auto mt-6 max-w-2xl text-base text-bone-dim sm:text-lg">
           Paste an abandoned Python repository. Necromancer performs an autopsy, writes a resurrection
           spec, rewrites it for Python 3.12 inside a sealed sandbox, and opens a pull request.
         </p>
