@@ -49,7 +49,10 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
     source.onopen = () => dispatch({ type: "connected", connected: true });
     source.onerror = () => dispatch({ type: "connected", connected: false });
     const handlers = EVENTS.map((name) => {
-      const handler = (e: MessageEvent<string>) => {
+      const handler = (e: Event) => {
+        // EventSource also fires a native "error" Event (no data) when the connection drops;
+        // only real server-sent frames are MessageEvents.
+        if (!(e instanceof MessageEvent) || typeof e.data !== "string") return;
         let data: unknown = {};
         try {
           data = JSON.parse(e.data);
@@ -58,7 +61,7 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
         }
         dispatch({ type: "event", event: name, seq: Number(e.lastEventId) || 0, data });
       };
-      source.addEventListener(name, handler as EventListener);
+      source.addEventListener(name, handler);
       return [name, handler] as const;
     });
     const end = () => {
@@ -68,7 +71,7 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
     };
     source.addEventListener("end", end);
     return () => {
-      handlers.forEach(([name, handler]) => source.removeEventListener(name, handler as EventListener));
+      handlers.forEach(([name, handler]) => source.removeEventListener(name, handler));
       source.removeEventListener("end", end);
       source.close();
     };
