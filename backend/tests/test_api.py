@@ -161,3 +161,26 @@ async def test_job_snapshot_carries_event_seq_and_stream_resumes_after_it(
     async with c.stream("GET", f"/api/jobs/{job_id}/events?after={seq - 1}") as stream:
         text = "".join([chunk async for chunk in stream.aiter_text()])
     assert text.count("id: ") == 1 and f"id: {seq}" in text
+
+
+async def test_task_progress_is_persisted_mid_ritual(
+    client: tuple[httpx.AsyncClient, JobManager], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    c, manager = client
+    seen: list[str] = []
+
+    async def slow_resurrect(self: Any) -> ResurrectionResult:
+        task = self.plan.tasks[0]
+        task.status = "done"
+        await self.emit("task", task.model_dump())
+        stored = manager.store.get(self.job_id)
+        assert stored is not None and stored.plan is not None
+        seen.append(stored.plan.tasks[0].status)
+        return ResurrectionResult(tests=RunResult(status=RunStatus.PASSED))
+
+    monkeypatch.setattr(jobs_mod.Resurrector, "run", slow_resurrect)
+    job_id = (await c.post("/api/summon", json={"url": "someone/deadrepo"})).json()["id"]
+    await manager.wait(job_id)
+    await c.post(f"/api/jobs/{job_id}/resurrect")
+    await manager.wait(job_id)
+    assert seen == ["done"]

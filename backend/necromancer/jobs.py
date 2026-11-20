@@ -158,6 +158,10 @@ class JobManager:
 
             async def emit(type_: str, data: dict[str, Any]) -> None:
                 await self._emit(job, type_, data)  # type: ignore[arg-type]
+                if type_ == "task":
+                    # Tasks are mutated in place on job.plan; persist so snapshots and
+                    # page reloads mid-ritual show the real candle state.
+                    self.store.save(job)
 
             await self._emit(job, "plan", job.plan.model_dump(mode="json"))
             await self._set_status(job, JobStatus.RESURRECTING)
