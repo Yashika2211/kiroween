@@ -1,22 +1,22 @@
 # Tasks: Autopsy
 
-- [ ] 1. Parse and normalise GitHub URLs (_Req 1.1, 1.2_)
-- [ ] 2. Shallow clone with size cap and workspace isolation (_Req 1.4_)
-- [ ] 3. Line counter and 5k limit (_Req 1.3_)
-- [ ] 4. GitHub metadata client with clone-date fallback (_Req 2_)
-- [ ] 5. Python 2 marker detector
-  - [ ] 5.1 Token-level markers (print stmt, backticks, `<>`, octal, long suffix, `ur""`)
-  - [ ] 5.2 Name/attribute markers (`iteritems`, `xrange`, `unicode`, ...)
-  - [ ] 5.3 Removed stdlib import markers
-  - [ ] 5.4 Python 3.12 parse check per file
-- [ ] 6. Dependency parsers (_Req 4.1_)
-  - [ ] 6.1 requirements.txt (including `-r` includes and markers)
-  - [ ] 6.2 setup.py via `ast` (install_requires literal lists)
-  - [ ] 6.3 setup.cfg and pyproject.toml
-- [ ] 7. PyPI latest-version lookup + dead package table (_Req 4.2_)
-- [ ] 8. OSV batch client (_Req 5_)
-- [ ] 9. Install probe through the sandbox (_Req 6_)
-- [ ] 10. Decay score with breakdown (_Req 7.1_)
-- [ ] 11. Cause-of-death verdict (_Req 7.2_)
-- [ ] 12. Service orchestration with progress events and warnings
-- [ ] 13. Run on all three demo repos in under 30 s (_Req 7.3_)
+- [x] 1. Parse and normalise GitHub URLs (_Req 1.1, 1.2_)
+- [x] 2. Shallow clone with size cap and workspace isolation (_Req 1.4_)
+- [x] 3. Line counter and 5k limit (_Req 1.3_)
+- [x] 4. GitHub metadata client with clone-date fallback (_Req 2_)
+- [x] 5. Python 2 marker detector
+  - [x] 5.1 Token-level markers (print stmt, backticks, `<>`, octal, long suffix, `ur""`)
+  - [x] 5.2 Name/attribute markers (`iteritems`, `xrange`, `unicode`, ...)
+  - [x] 5.3 Removed stdlib import markers
+  - [x] 5.4 Python 3.12 parse check per file
+- [x] 6. Dependency parsers (_Req 4.1_)
+  - [x] 6.1 requirements.txt (including `-r` includes and markers)
+  - [x] 6.2 setup.py via `ast` (install_requires literal lists)
+  - [x] 6.3 setup.cfg and pyproject.toml
+- [x] 7. PyPI latest-version lookup + dead package table (_Req 4.2_)
+- [x] 8. OSV batch client (_Req 5_)
+- [x] 9. Install probe through the sandbox (_Req 6_)
+- [x] 10. Decay score with breakdown (_Req 7.1_)
+- [x] 11. Cause-of-death verdict (_Req 7.2_)
+- [x] 12. Service orchestration with progress events and warnings
+- [x] 13. Run on all three demo repos in under 30 s (_Req 7.3_): measured 6–12 s with Docker
