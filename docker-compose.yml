@@ -1,0 +1,34 @@
+# One-command local run: `docker compose up --build`, then open http://localhost:3000
+#
+# The API launches sandbox containers as *siblings* via the Docker socket. Workspaces are
+# bind-mounted at the same absolute path inside and outside the API container so the
+# sandbox's `-v <workspace>:/src` mounts resolve on the host.
+services:
+  api:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NECRO_WORKSPACE_DIR: ${PWD}/backend/data/workspaces
+      NECRO_DB_PATH: /data/necromancer.sqlite3
+      NECRO_CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD}/backend/data/workspaces:${PWD}/backend/data/workspaces
+      - necro-db:/data
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  necro-db:
