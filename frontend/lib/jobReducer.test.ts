@@ -65,7 +65,19 @@ describe("jobReducer", () => {
     expect(v.error).toBe("too big");
   });
 
+  it("ignores events replayed after a reconnect", () => {
+    const diff = { path: "a.py", source: "py2to3", diff: "", added: 1, removed: 0 };
+    let v = jobReducer(initialView, { type: "event", event: "diff", seq: 5, data: diff });
+    v = jobReducer(v, { type: "event", event: "diff", seq: 5, data: diff });
+    v = jobReducer(v, { type: "event", event: "diff", seq: 3, data: diff });
+    expect(v.diffs).toHaveLength(1);
+    expect(v.lastSeq).toBe(5);
+    v = jobReducer(v, { type: "event", event: "diff", seq: 6, data: diff });
+    expect(v.diffs).toHaveLength(2);
+  });
+
   it("ignores unknown events", () => {
-    expect(jobReducer(initialView, { type: "event", event: "weird", seq: 1, data: {} })).toBe(initialView);
+    const v = jobReducer(initialView, { type: "event", event: "weird", seq: 1, data: {} });
+    expect({ ...v, lastSeq: 0 }).toEqual(initialView);
   });
 });

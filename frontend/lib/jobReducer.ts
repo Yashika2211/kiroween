@@ -25,6 +25,8 @@ export interface JobView {
   tests: TestEvent[];
   connected: boolean;
   error: string | null;
+  /** Highest server event sequence applied, so replays after a reconnect are ignored. */
+  lastSeq: number;
 }
 
 export type JobAction =
@@ -41,6 +43,7 @@ export const initialView: JobView = {
   tests: [],
   connected: false,
   error: null,
+  lastSeq: 0,
 };
 
 const MAX_LOGS = 400;
@@ -66,8 +69,11 @@ export function jobReducer(view: JobView, action: JobAction): JobView {
       };
     case "connected":
       return { ...view, connected: action.connected };
-    case "event":
-      return applyEvent(view, action.event, action.seq, action.data);
+    case "event": {
+      if (action.seq > 0 && action.seq <= view.lastSeq) return view;
+      const next = applyEvent(view, action.event, action.seq, action.data);
+      return action.seq > view.lastSeq ? { ...next, lastSeq: action.seq } : next;
+    }
   }
 }
 
