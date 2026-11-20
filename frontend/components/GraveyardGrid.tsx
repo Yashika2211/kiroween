@@ -42,7 +42,7 @@ export function GraveyardGrid() {
         </h2>
         {graves && graves.length > 0 && (
           <p className="text-sm text-bone-faint">
-            {graves.filter((g) => g.status === "risen").length} risen of {graves.length}
+            {graves.filter((g) => g.status === "risen" && g.tests_passed !== false).length} risen of {graves.length}
           </p>
         )}
       </div>

@@ -9,7 +9,9 @@ import { ACTIVE_STATUSES } from "@/lib/types";
 
 export function Tombstone({ grave, index }: { grave: JobSummary; index: number }) {
   const reduced = useReducedMotion();
-  const risen = grave.status === "risen";
+  // Only a resurrection whose tests pass counts as fully risen; otherwise it merely stirs.
+  const risen = grave.status === "risen" && grave.tests_passed !== false;
+  const stirring = grave.status === "risen" && grave.tests_passed === false;
   const active = ACTIVE_STATUSES.includes(grave.status);
   const failed = grave.status === "failed" || grave.status === "rejected";
   const [owner, name] = grave.repo.split("/");
@@ -25,9 +27,9 @@ export function Tombstone({ grave, index }: { grave: JobSummary; index: number }
     >
       <Link
         href={href}
-        className={`group relative block h-full rounded-t-[999px] rounded-b-md border-2 px-5 pb-6 pt-12 text-center transition
+        className={`group relative mx-auto block h-full max-w-sm rounded-t-[999px] rounded-b-md border-2 px-5 pb-6 pt-12 text-center transition
           ${risen ? "animate-pulse-glow border-ecto/70 bg-gradient-to-b from-[#24352d] to-stone-dark" : "border-stone-light bg-gradient-to-b from-stone-light to-stone-dark hover:border-bone-faint"}
-          ${active ? "border-candle/60" : ""}`}
+          ${active || stirring ? "border-candle/60" : ""}`}
       >
         <span aria-hidden="true" className="absolute left-1/2 top-4 -translate-x-1/2 text-lg text-bone-faint">
           {risen ? "☥" : "✝"}
@@ -43,11 +45,11 @@ export function Tombstone({ grave, index }: { grave: JobSummary; index: number }
         )}
         <p
           className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-            risen ? "bg-ecto/15 text-ecto" : failed ? "bg-blood/15 text-[#ffb3b6]" : active ? "bg-candle/15 text-candle" : "bg-crypt/60 text-bone-dim"
+            risen ? "bg-ecto/15 text-ecto" : failed ? "bg-blood/15 text-[#ffb3b6]" : active || stirring ? "bg-candle/15 text-candle" : "bg-crypt/60 text-bone-dim"
           }`}
         >
           {active && <span aria-hidden="true" className="inline-block h-1.5 w-1.5 animate-flicker rounded-full bg-candle" />}
-          {STATUS_LABEL[grave.status]}
+          {stirring ? "Stirring · tests failing" : STATUS_LABEL[grave.status]}
           {grave.decay_score !== null && !risen && <span className="font-mono">· decay {grave.decay_score}</span>}
         </p>
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 bottom-0 h-3 rounded-full bg-black/50 blur-md" />
