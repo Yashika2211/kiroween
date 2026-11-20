@@ -5,7 +5,7 @@
   "version": "1",
   "when": {
     "type": "fileEdited",
-    "patterns": ["**/requirements*.txt", "**/pyproject.toml", "demo-repos/**/setup.py"]
+    "patterns": ["**/requirements*.txt", "**/pyproject.toml", "**/setup.py", "**/setup.cfg"]
   },
   "then": {
     "type": "askAgent",
