@@ -3,9 +3,11 @@
 FROM python:3.12-slim
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates docker.io \
+ && apt-get install -y --no-install-recommends git ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=ghcr.io/astral-sh/uv:0.5.4 /uv /bin/uv
+# Only the Docker *client*: sandboxes run as siblings on the host daemon via the mounted socket.
+COPY --from=docker:27.3.1-cli /usr/local/bin/docker /usr/local/bin/docker
 
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
