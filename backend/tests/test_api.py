@@ -12,7 +12,7 @@ from necromancer.config import get_settings
 from necromancer.db import JobStore
 from necromancer.errors import RepoTooLarge
 from necromancer.jobs import JobManager
-from necromancer.models import ResurrectionResult, RunResult, RunStatus
+from necromancer.models import ResurrectionResult, RunResult, RunStatus, TaskStatus
 from necromancer.rise.publisher import Published
 from necromancer.sandbox.runner import SandboxConfig, SandboxRunner
 from tests.factories import certificate
@@ -171,7 +171,7 @@ async def test_task_progress_is_persisted_mid_ritual(
 
     async def slow_resurrect(self: Any) -> ResurrectionResult:
         task = self.plan.tasks[0]
-        task.status = "done"
+        task.status = TaskStatus.DONE
         await self.emit("task", task.model_dump())
         stored = manager.store.get(self.job_id)
         assert stored is not None and stored.plan is not None
