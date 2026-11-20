@@ -55,6 +55,14 @@ export default function RitualPage({ params }: { params: { id: string } }) {
         {tasks.length > 0 && ` · ${done} of ${tasks.length} candles lit`}
       </p>
 
+      {(view.status === "autopsied" || view.status === "autopsy" || view.status === "queued") && (
+        <p className="mt-6 text-center">
+          <Link href={`/jobs/${params.id}`} className="btn-ghost">
+            {view.status === "autopsied" ? "Read the certificate, then begin the ritual →" : "The autopsy is still running →"}
+          </Link>
+        </p>
+      )}
+
       {tasks.length > 0 && (
         <div className="panel mt-8 px-4 py-6">
           <CandleRow tasks={tasks} />
