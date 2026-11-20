@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import re
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,27 @@ from necromancer.workspace import Workspace, iter_python_files, read_text, safe_
 Emit = Callable[[str, dict[str, Any]], Awaitable[None]]
 
 MAX_MISSING_DEP_ROUNDS = 2
+
+_NOISE = (
+    "note:",
+    "error: subprocess-exited-with-error",
+    "×",
+    "╰─>",
+    "│",
+    "hint:",
+    "[end of output]",
+)
+
+
+def meaningful_error(output: str) -> str:
+    """The most informative error line in pip/pytest output (pip's own notes are skipped)."""
+    lines = [ln.strip() for ln in output.splitlines() if ln.strip()]
+    for line in reversed(lines):
+        if line.startswith(_NOISE):
+            continue
+        if re.search(r"\b\w*(Error|Exception)\b:|^error:|^ERROR:", line):
+            return line
+    return next((ln for ln in reversed(lines) if not ln.startswith(_NOISE)), "")
 
 
 async def _noop(_type: str, _data: dict[str, Any]) -> None:
@@ -258,9 +280,7 @@ class Resurrector:
             install = await self._install()
             tests = await self._test()
         if tests.ok and not install.ok:
-            last_line = next(
-                (ln.strip() for ln in reversed(install.tail.splitlines()) if ln.strip()), ""
-            )
+            last_line = meaningful_error(install.tail)
             await self.log(
                 "Tests pass when run from source, but installing the package itself still "
                 f"fails ({last_line[:160]}). This needs a manual look."

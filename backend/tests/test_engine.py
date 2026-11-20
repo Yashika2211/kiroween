@@ -241,3 +241,18 @@ async def test_install_failure_with_passing_tests_is_reported(
         sandbox=BrokenSetup([RunResult(status=RunStatus.PASSED)]),  # type: ignore[arg-type]
     ).run()
     assert any("README.rst" in n and "manual look" in n for n in result.notes)
+
+
+def test_meaningful_error_skips_pip_noise() -> None:
+    from necromancer.resurrection.engine import meaningful_error
+
+    tail = (
+        '  File "setup.py", line 10, in <module>\n'
+        "FileNotFoundError: [Errno 2] No such file or directory: 'README.rst'\n"
+        "  [end of output]\n"
+        "note: This error originates from a subprocess, and is likely not a problem with pip.\n"
+        "error: subprocess-exited-with-error\n"
+        "╰─> See above for output.\n"
+    )
+    assert meaningful_error(tail).startswith("FileNotFoundError: [Errno 2]")
+    assert meaningful_error("just one line") == "just one line"
