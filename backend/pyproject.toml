@@ -13,7 +13,7 @@ dependencies = [
   "pydantic>=2.8",
   "sse-starlette>=2.1",
   "packaging>=24.1",
-  "fissix>=24.4.24",
+  "fissix>=26.10.29",
   "pyupgrade>=3.17",
   "anthropic>=0.40",
 ]
