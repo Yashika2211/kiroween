@@ -4,19 +4,18 @@ import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
 import { STATUS_LABEL } from "@/lib/format";
+import { graveHref, graveState } from "@/lib/graveState";
 import type { JobSummary } from "@/lib/types";
-import { ACTIVE_STATUSES } from "@/lib/types";
 
 export function Tombstone({ grave, index }: { grave: JobSummary; index: number }) {
   const reduced = useReducedMotion();
-  // Only a resurrection whose tests pass counts as fully risen; otherwise it merely stirs.
-  const risen = grave.status === "risen" && grave.tests_passed !== false;
-  const stirring = grave.status === "risen" && grave.tests_passed === false;
-  const active = ACTIVE_STATUSES.includes(grave.status);
-  const failed = grave.status === "failed" || grave.status === "rejected";
+  const state = graveState(grave);
+  const risen = state === "risen";
+  const stirring = state === "stirring";
+  const active = state === "working";
+  const failed = state === "failed";
   const [owner, name] = grave.repo.split("/");
-  const ritualStarted = ["ritual", "resurrecting", "rising", "risen"].includes(grave.status);
-  const href = ritualStarted ? `/jobs/${grave.id}/ritual` : `/jobs/${grave.id}`;
+  const href = graveHref(grave);
 
   return (
     <motion.li
