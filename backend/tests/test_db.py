@@ -34,3 +34,12 @@ def test_summary_has_tombstone_fields() -> None:
     s = summarize(Job(id="b", repo="someone/deadrepo", url="u", certificate=certificate()))
     assert (s.born, s.died, s.decay_score) == (2011, 2013, 78)
     assert s.cause_of_death and s.cause_of_death.startswith("Acute")
+
+
+def test_summary_reports_test_outcome() -> None:
+    from necromancer.models import ResurrectionResult, RunResult, RunStatus
+
+    job = Job(id="c", repo="a/b", url="u", status=JobStatus.RISEN)
+    assert summarize(job).tests_passed is None
+    job.result = ResurrectionResult(tests=RunResult(status=RunStatus.FAILED))
+    assert summarize(job).tests_passed is False

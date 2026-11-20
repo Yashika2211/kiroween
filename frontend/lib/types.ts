@@ -173,6 +173,7 @@ export interface JobSummary {
   cause_of_death: string | null;
   decay_score: number | null;
   pr_url: string | null;
+  tests_passed: boolean | null;
 }
 
 export interface Health {

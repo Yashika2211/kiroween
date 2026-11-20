@@ -269,6 +269,7 @@ class JobSummary(BaseModel):
     cause_of_death: str | None = None
     decay_score: int | None = None
     pr_url: str | None = None
+    tests_passed: bool | None = None
 
 
 EventType = Literal[

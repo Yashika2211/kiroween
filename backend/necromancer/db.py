@@ -93,4 +93,5 @@ def summarize(job: Job) -> JobSummary:
         cause_of_death=cert.cause_of_death if cert else job.error,
         decay_score=cert.decay_score if cert else None,
         pr_url=job.result.pr_url if job.result else None,
+        tests_passed=(job.result.tests.ok if job.result and job.result.tests else None),
     )
