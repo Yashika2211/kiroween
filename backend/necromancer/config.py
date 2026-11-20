@@ -38,6 +38,7 @@ class Settings:
     sandbox_image: str
     sandbox_mode: str
     rate_limit_per_hour: int = 20
+    workspace_ttl_hours: int = 24
     cors_origins: list[str] = field(default_factory=list)
 
     @property
@@ -66,6 +67,7 @@ def get_settings() -> Settings:
         sandbox_image=os.environ.get("NECRO_SANDBOX_IMAGE", "python:3.12-slim"),
         sandbox_mode=os.environ.get("NECRO_SANDBOX_MODE", "docker"),
         rate_limit_per_hour=_int("NECRO_RATE_LIMIT_PER_HOUR", 20),
+        workspace_ttl_hours=_int("NECRO_WORKSPACE_TTL_HOURS", 24),
         cors_origins=[
             o.strip()
             for o in os.environ.get("NECRO_CORS_ORIGINS", "http://localhost:3000").split(",")

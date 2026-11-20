@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
+import time
 import uuid
 from typing import Any
 
@@ -223,6 +225,23 @@ class JobManager:
         self.get(job_id)
         self.store.delete(job_id)
         self.workspace(job_id).destroy()
+
+    def prune_workspaces(self, now: float | None = None) -> int:
+        """Delete clones older than the TTL. Results and patches stay in the database."""
+        root = self.settings.workspace_dir
+        if self.settings.workspace_ttl_hours <= 0 or not root.is_dir():
+            return 0
+        cutoff = (
+            now if now is not None else time.time()
+        ) - self.settings.workspace_ttl_hours * 3600
+        pruned = 0
+        for path in root.iterdir():
+            if not path.is_dir() or path.is_symlink() or self.is_running(path.name):
+                continue
+            if path.stat().st_mtime < cutoff:
+                shutil.rmtree(path, ignore_errors=True)
+                pruned += 1
+        return pruned
 
     def recover(self) -> int:
         return self.store.mark_interrupted(ACTIVE_STATUSES)

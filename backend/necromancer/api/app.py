@@ -53,6 +53,7 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         mgr = manager or JobManager(cfg, JobStore(cfg.db_path))
         mgr.recover()
+        mgr.prune_workspaces()
         app.state.manager = mgr
         yield
         await mgr.shutdown()
