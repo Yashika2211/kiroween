@@ -125,4 +125,5 @@ The backend needs a Docker daemon to run sandboxes, so serverless hosts won't wo
   Set `NECRO_CORS_ORIGINS` to the frontend URL.
 - **Frontend:** Vercel (root directory `frontend/`) with `NEXT_PUBLIC_API_URL=https://<your-api-host>`,
   or the `web` service in `docker-compose.yml`.
-- For judges, consider `NECRO_MAX_LINES=5000` (the default) and keep the three demo repos pre-summoned.
+- Pre-populate the graveyard for judges: `scripts/seed_demo.sh https://<your-api-host> --resurrect`.
+- `NECRO_RATE_LIMIT_PER_HOUR` (default 20 per client) protects the sandbox host from abuse.
