@@ -76,7 +76,7 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
       source.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, generation, shouldStream && view.job !== null]);
+  }, [jobId, generation, shouldStream && view.job !== null, active ? tick : -1]);
 
   return { ...view, reload };
 }
