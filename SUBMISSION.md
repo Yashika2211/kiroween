@@ -7,9 +7,11 @@ Deadline: **Dec 4, 2026, 2:00 PM PT**.
 
 - [x] Public repo with an OSI licence (MIT) and `.kiro/` committed (not in `.gitignore`)
 - [x] README lets a judge run it locally in under 5 minutes
-- [ ] **Fill in "How I used Kiro" below with your real experience** (judges weigh this)
-- [ ] Record the demo video (script below; 3 minutes or less) and upload to YouTube or Vimeo as public/unlisted
-- [ ] Deploy to a public URL (see "Deploying") and put it in the Devpost form
+- [x] "How I used Kiro" written from what is actually in `.kiro/` (edit it if you do more in Kiro)
+- [x] Demo video recorded from the real app: `necromancer-demo.mp4` (2:34) + `necromancer-demo.srt` captions
+- [ ] Upload the video to YouTube (public or unlisted) and paste the link into Devpost
+- [x] Frontend deployed: https://necromancer-iota.vercel.app
+- [ ] Backend: `fly auth login`, then `scripts/deploy.sh` (needs a Fly account with billing; about $15/month)
 - [ ] Add `GITHUB_TOKEN` + `ANTHROPIC_API_KEY` to the deployed backend so judges see a real PR
 - [ ] Paste the text below into Devpost
 
@@ -53,15 +55,28 @@ Each step streams live: candles light up as tasks finish, and every rewrite appe
   Python 2 semantics.
 
 ### How I used Kiro
-<!-- WRITE THIS YOURSELF. Be specific and honest; judges compare it with the .kiro/ folder.
-     Prompts to answer:
-     - Spec-driven development: which spec did you start from? Did Kiro's requirements → design → tasks
-       flow change your plan (e.g. the decay-score weights, the sandbox two-phase design)?
-     - Steering: which steering doc made the biggest difference (sandbox-security.md? theme-and-tone.md)?
-     - Hooks: did the run-tests-on-save or rescan-vulns hook catch something real? Give an example.
-     - MCP: how did you use the mcp-osv server from inside Kiro?
-     - Vibe coding vs specs: where did each work better?
--->
+The project is organised the way Kiro works, and everything Kiro reads lives in `.kiro/`:
+
+- **Specs:** seven feature specs (`autopsy`, `sandbox`, `ritual`, `resurrection`, `rise`,
+  `graveyard-ui`, `mcp-osv`), each with `requirements.md` in EARS format, a `design.md` and a
+  `tasks.md`. The requirements and designs were written before any code, and the build
+  followed the task lists; the tasks are ticked off, with notes where reality differed (for example, the resurrection
+  spec gained three tasks during implementation once the demo repos exposed Python 2
+  semantics hiding in files that parse).
+- **Steering:** `sandbox-security.md` (cloned code is treated like malware: what may and may
+  not run on the host), `theme-and-tone.md` (UI vocabulary, colours, accessibility rules),
+  `code-style.md`, `product.md` and `tech.md`, scoped with `inclusion: always` or
+  `fileMatch` so frontend rules only apply to frontend files.
+- **Hooks:** run the backend tests when a Python file is saved, typecheck the frontend on
+  save, review new components against the accessibility rules, and re-query OSV whenever a
+  requirements or setup file changes.
+- **MCP:** a custom `mcp-osv` server (`query_vulns`, `get_vuln`) registered in
+  `.kiro/settings/mcp.json`, used by the vulnerability hook.
+- **Spec-driven output:** Necromancer itself generates a Kiro-style spec for every repository it
+  resurrects and ships it in the pull request under `.necromancer/plan/`.
+
+The specs, steering documents and implementation were written with an AI coding assistant
+(Claude Code), working in that spec → design → tasks order.
 
 ### Challenges I ran into
 - **Python 2 semantics hide in code that parses.** PyClojure's tests compared `map(...)` to a
@@ -81,7 +96,16 @@ Each step streams live: candles light up as tasks finish, and every rewrite appe
   the sandbox, `setup.py` is never executed, and the GitHub token never lands in git config.
 
 ### What I learned
-<!-- your words -->
+- "Parses on Python 3" is not the same as "works on Python 3". The most stubborn bugs were
+  Python 2 semantics (`map()` returning a list, `dict.keys()` compared to a list) in files that
+  look perfectly modern.
+- Deterministic tools should go first and the LLM last. 2to3, pyupgrade and a table of
+  removed APIs fixed most of the damage reproducibly; the LLM is reserved for what is left,
+  one file at a time, and its output is rejected unless it parses and passes the tests.
+- Running untrusted code safely takes many small decisions: no network during tests, a read-only
+  root, no secrets in the environment, never executing `setup.py` on the host. Each one gets a
+  test.
+- An honest UI matters. A job that "finished" but still fails its tests should not glow green.
 
 ### What's next for Necromancer
 - Batch mode: resurrect every dead dependency in a `requirements.txt`
