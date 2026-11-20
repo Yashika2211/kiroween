@@ -8,6 +8,8 @@ autopsy, a resurrection spec, and a working pull request for Python 3.12.
 
 Built for **Kiroween 2026**, category: **Resurrection**.
 
+**🎬 [Demo video (2:34)](https://github.com/Yashika2211/kiroween/releases/download/v1.0.0/necromancer-demo.mp4)** · **🪦 [Live app](https://necromancer-iota.vercel.app)**
+
 ```
 Summon ──▶ Autopsy ──▶ Ritual ──▶ Resurrection ──▶ Rise
  URL       Death        Kiro-style   2to3 → pyupgrade →     Pull request
