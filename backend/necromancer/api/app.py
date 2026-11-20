@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
@@ -69,6 +69,7 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
         allow_origins=cfg.cors_origins,
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Content-Type", "Last-Event-ID"],
+        expose_headers=["X-Event-Seq"],
     )
 
     limiter = RateLimiter(cfg.rate_limit_per_hour, 3600)
@@ -111,8 +112,11 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
         return [summarize(j) for j in mgr(request).store.list()]
 
     @app.get("/api/jobs/{job_id}", response_model=Job)
-    async def get_job(job_id: str, request: Request) -> Job:
-        job = mgr(request).get(job_id)
+    async def get_job(job_id: str, request: Request, response: Response) -> Job:
+        m = mgr(request)
+        job = m.get(job_id)
+        # Lets the client skip replayed events this snapshot already reflects.
+        response.headers["X-Event-Seq"] = str(m.bus.last_seq(job_id))
         if job.result and job.result.patch:
             job.result.patch = None  # served separately; can be large
         return job
@@ -142,7 +146,8 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
     async def events(job_id: str, request: Request) -> EventSourceResponse:
         m = mgr(request)
         job = m.get(job_id)
-        last_id = request.headers.get("last-event-id", "0")
+        # EventSource can't set headers on the first connection, so `?after=` is accepted too.
+        last_id = request.headers.get("last-event-id") or request.query_params.get("after", "0")
         after = int(last_id) if last_id.isdigit() else 0
 
         async def stream() -> AsyncIterator[dict[str, str]]:

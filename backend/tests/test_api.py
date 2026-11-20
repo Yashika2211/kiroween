@@ -147,3 +147,17 @@ async def test_finished_job_after_restart_gets_snapshot_then_end(
     async with c.stream("GET", f"/api/jobs/{job_id}/events") as stream:
         text = "".join([chunk async for chunk in stream.aiter_text()])
     assert "event: snapshot" in text and "event: end" in text
+
+
+async def test_job_snapshot_carries_event_seq_and_stream_resumes_after_it(
+    client: tuple[httpx.AsyncClient, JobManager],
+) -> None:
+    c, manager = client
+    job_id = (await c.post("/api/summon", json={"url": "someone/deadrepo"})).json()["id"]
+    await manager.wait(job_id)
+    r = await c.get(f"/api/jobs/{job_id}")
+    seq = int(r.headers["x-event-seq"])
+    assert seq == manager.bus.last_seq(job_id) > 3
+    async with c.stream("GET", f"/api/jobs/{job_id}/events?after={seq - 1}") as stream:
+        text = "".join([chunk async for chunk in stream.aiter_text()])
+    assert text.count("id: ") == 1 and f"id: {seq}" in text

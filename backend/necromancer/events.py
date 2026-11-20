@@ -31,6 +31,9 @@ class EventBus:
             queue.put_nowait(event)
         return event
 
+    def last_seq(self, job_id: str) -> int:
+        return self._seq.get(job_id, 0)
+
     def history(self, job_id: str, after: int = 0) -> list[JobEvent]:
         return [e for e in self._history.get(job_id, []) if e.seq > after]
 
