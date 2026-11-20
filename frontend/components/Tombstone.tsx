@@ -13,11 +13,8 @@ export function Tombstone({ grave, index }: { grave: JobSummary; index: number }
   const active = ACTIVE_STATUSES.includes(grave.status);
   const failed = grave.status === "failed" || grave.status === "rejected";
   const [owner, name] = grave.repo.split("/");
-  const href = grave.status === "autopsied" || grave.status === "autopsy" || failed && !grave.decay_score
-    ? `/jobs/${grave.id}`
-    : grave.status === "queued"
-      ? `/jobs/${grave.id}`
-      : `/jobs/${grave.id}/ritual`;
+  const ritualStarted = ["ritual", "resurrecting", "rising", "risen"].includes(grave.status);
+  const href = ritualStarted ? `/jobs/${grave.id}/ritual` : `/jobs/${grave.id}`;
 
   return (
     <motion.li
