@@ -1,0 +1,23 @@
+# Self-contained deploy image for hosts that give you a whole VM (e.g. Fly.io Machines):
+# runs its own Docker daemon for the sandboxes, plus the Necromancer API.
+FROM docker:27.3.1-dind
+
+RUN apk add --no-cache git bash curl ca-certificates tini python3 \
+ && python3 -c "import sys; assert sys.version_info[:2] == (3, 12), sys.version"
+COPY --from=ghcr.io/astral-sh/uv:0.5.4 /uv /bin/uv
+ENV UV_PYTHON=/usr/bin/python3 UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
+
+WORKDIR /app
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-dev --no-install-project
+COPY necromancer ./necromancer
+RUN uv sync --frozen --no-dev
+COPY deploy/start.sh /start.sh
+RUN chmod +x /start.sh
+
+ENV NECRO_DB_PATH=/data/necromancer.sqlite3 \
+    NECRO_WORKSPACE_DIR=/data/workspaces \
+    PYTHONUNBUFFERED=1
+EXPOSE 8000
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/start.sh"]
