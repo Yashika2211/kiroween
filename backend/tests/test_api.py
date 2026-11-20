@@ -135,3 +135,15 @@ async def test_summon_is_rate_limited(tmp_path: Path) -> None:
         assert (await c.post("/api/summon", json=bad)).status_code == 422
         r = await c.post("/api/summon", json=bad)
         assert r.status_code == 429 and r.json()["code"] == "rate_limited"
+
+
+async def test_finished_job_after_restart_gets_snapshot_then_end(
+    client: tuple[httpx.AsyncClient, JobManager],
+) -> None:
+    c, manager = client
+    job_id = (await c.post("/api/summon", json={"url": "someone/deadrepo"})).json()["id"]
+    await manager.wait(job_id)
+    manager.bus = type(manager.bus)()  # simulate a server restart: no in-memory history
+    async with c.stream("GET", f"/api/jobs/{job_id}/events") as stream:
+        text = "".join([chunk async for chunk in stream.aiter_text()])
+    assert "event: snapshot" in text and "event: end" in text

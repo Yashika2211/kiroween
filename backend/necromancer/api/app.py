@@ -152,6 +152,7 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
                     "event": "snapshot",
                     "data": job.model_dump_json(exclude={"result": {"patch"}}),
                 }
+                yield {"event": "end", "data": "{}"}
                 return
             async for event in m.bus.subscribe(job_id, after):
                 if await request.is_disconnected():
