@@ -11,6 +11,7 @@ primary_region = "iad"
   NECRO_MAX_LINES = "5000"
   NECRO_RATE_LIMIT_PER_HOUR = "20"
   NECRO_WORKSPACE_TTL_HOURS = "24"
+  NECRO_CORS_ORIGINS = "https://necromancer-iota.vercel.app,https://necromancer-yashika2211s-projects.vercel.app,http://localhost:3000"
 
 [http_service]
   internal_port = 8000

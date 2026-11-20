@@ -39,7 +39,7 @@ WEB_URL="$(vercel deploy --prod --yes | tail -1)"
 cd ..
 
 echo "==> Allow the UI origin on the API"
-fly secrets set -a "$APP" NECRO_CORS_ORIGINS="$WEB_URL,https://necromancer.vercel.app"
+fly secrets set -a "$APP" NECRO_CORS_ORIGINS="$WEB_URL,https://necromancer-iota.vercel.app,http://localhost:3000"
 
 echo "==> Seeding the graveyard"
 scripts/seed_demo.sh "$API_URL" --resurrect || true
