@@ -1,5 +1,8 @@
 # 🧟 Necromancer
 
+[![ci](https://github.com/Yashika2211/kiroween/actions/workflows/ci.yml/badge.svg)](https://github.com/Yashika2211/kiroween/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-7cf5a5.svg)](LICENSE)
+
 **Resurrects abandoned open-source Python repositories.** Paste a dead GitHub repo, get an
 autopsy, a resurrection spec, and a working pull request for Python 3.12.
 
