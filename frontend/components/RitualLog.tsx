@@ -5,9 +5,11 @@ import { useEffect, useRef } from "react";
 import type { LogLine } from "@/lib/jobReducer";
 
 export function RitualLog({ logs, live }: { logs: LogLine[]; live: boolean }) {
-  const end = useRef<HTMLLIElement>(null);
+  const list = useRef<HTMLOListElement>(null);
+  // Scroll only the log box, never the page.
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "nearest" });
+    const el = list.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [logs.length]);
 
   return (
@@ -18,7 +20,7 @@ export function RitualLog({ logs, live }: { logs: LogLine[]; live: boolean }) {
         </h2>
         <span className={`text-xs ${live ? "text-ecto" : "text-bone-faint"}`}>{live ? "● live" : "○ idle"}</span>
       </div>
-      <ol className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed" aria-live="polite" aria-relevant="additions">
+      <ol ref={list} className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed" aria-live="polite" aria-relevant="additions">
         {logs.length === 0 && <li className="text-bone-faint">Waiting for the first words…</li>}
         {logs.map((l, i) => (
           <li key={`${l.seq}-${i}`} className={l.tone === "good" ? "text-ecto" : l.tone === "bad" ? "text-[#ffb3b6]" : "text-bone-dim"}>
@@ -28,7 +30,6 @@ export function RitualLog({ logs, live }: { logs: LogLine[]; live: boolean }) {
             {l.message}
           </li>
         ))}
-        <li ref={end} aria-hidden="true" />
       </ol>
     </section>
   );
