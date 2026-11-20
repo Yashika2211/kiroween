@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AutopsySteps } from "@/components/AutopsySteps";
+import { BuryButton } from "@/components/BuryButton";
 import { DeathCertificate } from "@/components/DeathCertificate";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { ApiError, api } from "@/lib/api";
@@ -65,6 +66,11 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
               <Link href={`/jobs/${params.id}/ritual`} className="btn-ghost">
                 View the ritual →
               </Link>
+            )}
+            {job && !["autopsy", "ritual", "resurrecting", "rising"].includes(job.status) && (
+              <div className="mt-6">
+                <BuryButton jobId={job.id} repo={job.repo} />
+              </div>
             )}
             {startError && (
               <p role="alert" className="text-[#ffc9cb]">
