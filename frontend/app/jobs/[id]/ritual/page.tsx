@@ -51,7 +51,11 @@ export default function RitualPage({ params }: { params: { id: string } }) {
       </p>
       <h1 className="mt-4 text-center font-display text-6xl text-bone">The Ritual</h1>
       <p className="mt-2 text-center text-bone-dim" role="status">
-        {view.status ? STATUS_LABEL[view.status] : "…"}
+        {view.status === "risen" && job.result?.tests && job.result.tests.status !== "passed"
+          ? "Stirring · tests still failing"
+          : view.status
+            ? STATUS_LABEL[view.status]
+            : "…"}
         {tasks.length > 0 && ` · ${done} of ${tasks.length} candles lit`}
       </p>
 

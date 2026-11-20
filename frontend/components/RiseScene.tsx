@@ -15,7 +15,9 @@ export function RiseScene({ job }: { job: Job }) {
   const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.6 } };
 
   return (
-    <section aria-labelledby="rise-heading" className="relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-xl border border-ecto/40 bg-gradient-to-b from-[#132219] to-crypt p-8 text-center">
+    <section aria-labelledby="rise-heading" className={`relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-xl border p-8 text-center ${
+        passed ? "border-ecto/40 bg-gradient-to-b from-[#132219] to-crypt" : "border-candle/40 bg-gradient-to-b from-[#241d12] to-crypt"
+      }`}>
       <div className="relative mx-auto h-56 w-48" aria-hidden="true">
         {/* left half of the stone */}
         <motion.div
@@ -35,13 +37,15 @@ export function RiseScene({ job }: { job: Job }) {
         />
         {/* the risen repo */}
         <motion.div
-          className="absolute inset-x-6 bottom-6 flex h-32 flex-col items-center justify-center rounded-lg border border-ecto bg-crypt/90 shadow-ecto"
+          className={`absolute inset-x-6 bottom-6 flex h-32 flex-col items-center justify-center rounded-lg border bg-crypt/90 ${
+            passed ? "border-ecto shadow-ecto" : "border-candle shadow-candle"
+          }`}
           initial={reduced ? { opacity: 0 } : { y: 90, opacity: 0, scale: 0.8 }}
           animate={reduced ? { opacity: 1 } : { y: -20, opacity: 1, scale: 1 }}
           transition={{ delay: reduced ? 0 : 1.1, duration: reduced ? 0.4 : 1.1, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <span className="text-3xl">🧟</span>
-          <span className="mt-1 max-w-full truncate px-2 font-display text-xl text-ecto">{name}</span>
+          <span className={`mt-1 max-w-full truncate px-2 font-display text-xl ${passed ? "text-ecto" : "text-candle"}`}>{name}</span>
           <span className="font-mono text-[10px] text-bone-dim">python 3.12</span>
         </motion.div>
       </div>
