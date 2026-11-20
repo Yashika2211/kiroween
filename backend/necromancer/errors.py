@@ -39,3 +39,7 @@ class JobNotFound(NecromancerError):
 
 class InvalidJobState(NecromancerError):
     code = "invalid_job_state"
+
+
+class RateLimited(NecromancerError):
+    code = "rate_limited"

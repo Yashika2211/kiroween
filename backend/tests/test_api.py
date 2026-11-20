@@ -114,3 +114,24 @@ async def test_rejected_repo(client: tuple[httpx.AsyncClient, JobManager]) -> No
     await manager.wait(job_id)
     job = (await c.get(f"/api/jobs/{job_id}")).json()
     assert job["status"] == "rejected" and job["error_code"] == "repo_too_large"
+
+
+async def test_summon_is_rate_limited(tmp_path: Path) -> None:
+    settings = replace(
+        get_settings(),
+        db_path=tmp_path / "db.sqlite3",
+        workspace_dir=tmp_path / "ws",
+        rate_limit_per_hour=1,
+    )
+    manager = JobManager(
+        settings, JobStore(settings.db_path), sandbox=SandboxRunner(SandboxConfig(enabled=False))
+    )
+    app = create_app(settings, manager)
+    async with (
+        app.router.lifespan_context(app),
+        httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c,
+    ):
+        bad = {"url": "not a url"}  # validation happens after the limiter, so no job starts
+        assert (await c.post("/api/summon", json=bad)).status_code == 422
+        r = await c.post("/api/summon", json=bad)
+        assert r.status_code == 429 and r.json()["code"] == "rate_limited"

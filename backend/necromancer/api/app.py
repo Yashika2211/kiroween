@@ -20,14 +20,17 @@ from necromancer.errors import (
     InvalidRepoURL,
     JobNotFound,
     NecromancerError,
+    RateLimited,
 )
 from necromancer.jobs import JobManager
 from necromancer.models import Job, JobSummary
+from necromancer.ratelimit import RateLimiter
 
 STATUS_FOR = {
     InvalidRepoURL: 422,
     JobNotFound: 404,
     InvalidJobState: 409,
+    RateLimited: 429,
 }
 
 
@@ -67,6 +70,17 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
         allow_headers=["Content-Type", "Last-Event-ID"],
     )
 
+    limiter = RateLimiter(cfg.rate_limit_per_hour, 3600)
+
+    def throttle(request: Request) -> None:
+        """Summoning and resurrecting start Docker work, so they are rate limited per client."""
+        client = request.client.host if request.client else "unknown"
+        wait = limiter.check(client)
+        if wait is not None:
+            raise RateLimited(
+                f"Too many summonings from this address. Try again in {int(wait // 60) + 1} min."
+            )
+
     def mgr(request: Request) -> JobManager:
         return request.app.state.manager  # type: ignore[no-any-return]
 
@@ -88,6 +102,7 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
 
     @app.post("/api/summon", response_model=Job, status_code=202)
     async def summon(body: SummonRequest, request: Request) -> Job:
+        throttle(request)
         return await mgr(request).summon(body.url)
 
     @app.get("/api/jobs", response_model=list[JobSummary])
@@ -103,6 +118,7 @@ def create_app(settings: Settings | None = None, manager: JobManager | None = No
 
     @app.post("/api/jobs/{job_id}/resurrect", response_model=Job, status_code=202)
     async def resurrect(job_id: str, request: Request) -> Job:
+        throttle(request)
         return await mgr(request).resurrect(job_id)
 
     @app.delete("/api/jobs/{job_id}", status_code=204)
