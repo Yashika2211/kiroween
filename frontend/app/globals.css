@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #0b0a10;
+  color: #ece6d9;
+}
+
+body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 245, 165, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 110%, rgba(90, 70, 140, 0.18), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid #7cf5a5;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: rgba(124, 245, 165, 0.35);
+  color: #0b0a10;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 font-semibold tracking-wide transition
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ecto {
+    @apply btn bg-ecto text-crypt hover:bg-[#9dffbe] shadow-ecto;
+  }
+  .btn-ghost {
+    @apply btn border border-stone-light text-bone hover:border-ecto hover:text-ecto;
+  }
+  .panel {
+    @apply rounded-xl border border-stone bg-crypt-2/80 backdrop-blur-sm;
+  }
+  .label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-bone-faint;
+  }
+}
+
+/* Aged paper for the Death Certificate. */
+.paper {
+  background-color: #efe3c8;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(139, 109, 62, 0.18), transparent 35%),
+    radial-gradient(circle at 85% 75%, rgba(139, 109, 62, 0.22), transparent 40%),
+    radial-gradient(circle at 60% 10%, rgba(255, 255, 255, 0.35), transparent 30%),
+    repeating-linear-gradient(0deg, rgba(107, 90, 67, 0.04) 0 1px, transparent 1px 3px);
+  color: #2b2118;
+}
+
+.diff-add { background: rgba(124, 245, 165, 0.12); color: #b8ffd0; }
+.diff-del { background: rgba(229, 72, 77, 0.14); color: #ffb3b6; }
+.diff-hunk { color: #8fb3ff; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
