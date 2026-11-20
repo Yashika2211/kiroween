@@ -49,6 +49,20 @@ export const api = {
   summon: (url: string) => request<Job>("/api/summon", { method: "POST", body: JSON.stringify({ url }) }),
   jobs: () => request<JobSummary[]>("/api/jobs"),
   job: (id: string) => request<Job>(`/api/jobs/${encodeURIComponent(id)}`),
+  /** The job plus the event sequence number the snapshot reflects. */
+  jobWithSeq: async (id: string): Promise<{ job: Job; seq: number }> => {
+    let response: Response;
+    try {
+      response = await fetch(`${API_URL}/api/jobs/${encodeURIComponent(id)}`, { cache: "no-store" });
+    } catch {
+      throw new ApiError(0, "unreachable", "The crypt is sealed: can't reach the Necromancer API.");
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { code?: string; message?: string };
+      throw new ApiError(response.status, body.code ?? "error", body.message ?? `Request failed (${response.status})`);
+    }
+    return { job: (await response.json()) as Job, seq: Number(response.headers.get("X-Event-Seq")) || 0 };
+  },
   resurrect: (id: string) =>
     request<Job>(`/api/jobs/${encodeURIComponent(id)}/resurrect`, { method: "POST" }),
   bury: (id: string) => request<void>(`/api/jobs/${encodeURIComponent(id)}`, { method: "DELETE" }),

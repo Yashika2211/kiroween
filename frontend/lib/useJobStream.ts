@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 
 import { api } from "./api";
 import { initialView, jobReducer, type JobView } from "./jobReducer";
@@ -20,32 +20,50 @@ const EVENTS = [
   "error",
 ] as const;
 
-/** Load a job and follow its live event stream. Reconnects whenever the job becomes active. */
+/** If the stream is silent this long while the job is active, poll the snapshot instead. */
+const QUIET_MS = 3000;
+
+/**
+ * Load a job and follow it live.
+ *
+ * - The snapshot (`GET /api/jobs/:id`) carries the event sequence it reflects, so replayed
+ *   events at or below it are ignored and can't roll the view back.
+ * - One EventSource per page; if it ends while the job is still active it is reopened from
+ *   the last applied sequence.
+ * - If the stream goes quiet while the job is active, the snapshot is polled, so the page
+ *   never freezes even if a stream stalls.
+ */
 export function useJobStream(jobId: string, generation = 0): JobView & { reload: () => void } {
   const [view, dispatch] = useReducer(jobReducer, initialView);
-  const [tick, reload] = useReducer((n: number) => n + 1, 0);
+  const [epoch, reopen] = useReducer((n: number) => n + 1, 0);
+  const lastSeqRef = useRef(0);
+  const lastEventAt = useRef(Date.now());
+  const streamOpen = useRef(false);
+  lastSeqRef.current = view.lastSeq;
 
-  useEffect(() => {
-    let cancelled = false;
+  const reload = useCallback(() => {
     api
-      .job(jobId)
-      .then((job) => !cancelled && dispatch({ type: "loaded", job }))
+      .jobWithSeq(jobId)
+      .then(({ job, seq }) => {
+        dispatch({ type: "loaded", job, seq });
+        lastEventAt.current = Date.now();
+        if (ACTIVE_STATUSES.includes(job.status) && !streamOpen.current) reopen();
+      })
       .catch((err: unknown) => {
-        if (cancelled) return;
         const message = err instanceof Error ? err.message : "Could not load this grave.";
         dispatch({ type: "event", event: "error", seq: 0, data: { message } });
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, tick]);
+  }, [jobId]);
 
-  const active = view.status !== null && ACTIVE_STATUSES.includes(view.status);
-  const shouldStream = view.status === null || active || generation > 0;
-
+  // Initial load, and again whenever the caller restarts the job.
   useEffect(() => {
-    if (!shouldStream) return;
-    const source = new EventSource(api.eventsUrl(jobId));
+    reload();
+  }, [reload, generation]);
+
+  // The live stream.
+  useEffect(() => {
+    const source = new EventSource(`${api.eventsUrl(jobId)}?after=${lastSeqRef.current}`);
+    streamOpen.current = true;
     source.onopen = () => dispatch({ type: "connected", connected: true });
     source.onerror = () => dispatch({ type: "connected", connected: false });
     const handlers = EVENTS.map((name) => {
@@ -59,6 +77,7 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
         } catch {
           /* ignore malformed frames */
         }
+        lastEventAt.current = Date.now();
         dispatch({ type: "event", event: name, seq: Number(e.lastEventId) || 0, data });
       };
       source.addEventListener(name, handler);
@@ -66,6 +85,7 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
     });
     const end = () => {
       source.close();
+      streamOpen.current = false;
       dispatch({ type: "connected", connected: false });
       reload();
     };
@@ -74,9 +94,19 @@ export function useJobStream(jobId: string, generation = 0): JobView & { reload:
       handlers.forEach(([name, handler]) => source.removeEventListener(name, handler));
       source.removeEventListener("end", end);
       source.close();
+      streamOpen.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, generation, shouldStream && view.job !== null, active ? tick : -1]);
+  }, [jobId, generation, epoch, reload]);
+
+  // Safety net: poll while active if the stream has gone quiet.
+  const active = view.status !== null && ACTIVE_STATUSES.includes(view.status);
+  useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(() => {
+      if (Date.now() - lastEventAt.current > QUIET_MS) reload();
+    }, QUIET_MS);
+    return () => clearInterval(timer);
+  }, [active, reload]);
 
   return { ...view, reload };
 }

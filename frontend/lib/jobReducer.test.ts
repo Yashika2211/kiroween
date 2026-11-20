@@ -76,6 +76,17 @@ describe("jobReducer", () => {
     expect(v.diffs).toHaveLength(2);
   });
 
+  it("ignores replayed events the loaded snapshot already reflects", () => {
+    let v = jobReducer(initialView, { type: "loaded", job: { ...job, status: "resurrecting" }, seq: 10 });
+    v = jobReducer(v, { type: "event", event: "status", seq: 3, data: { status: "autopsied" } });
+    expect(v.status).toBe("resurrecting");
+    v = jobReducer(v, { type: "event", event: "status", seq: 11, data: { status: "rising" } });
+    expect(v.status).toBe("rising");
+    // an older snapshot arriving late is ignored
+    v = jobReducer(v, { type: "loaded", job: { ...job, status: "ritual" }, seq: 9 });
+    expect(v.status).toBe("rising");
+  });
+
   it("ignores unknown events", () => {
     const v = jobReducer(initialView, { type: "event", event: "weird", seq: 1, data: {} });
     expect({ ...v, lastSeq: 0 }).toEqual(initialView);

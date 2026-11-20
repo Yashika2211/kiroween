@@ -30,7 +30,7 @@ export interface JobView {
 }
 
 export type JobAction =
-  | { type: "loaded"; job: Job }
+  | { type: "loaded"; job: Job; seq?: number }
   | { type: "connected"; connected: boolean }
   | { type: "event"; event: string; seq: number; data: unknown };
 
@@ -59,14 +59,18 @@ function withJob(view: JobView, patch: Partial<Job>): Job | null {
 
 export function jobReducer(view: JobView, action: JobAction): JobView {
   switch (action.type) {
-    case "loaded":
+    case "loaded": {
+      // Never let an older snapshot overwrite newer streamed state.
+      if (action.seq !== undefined && action.seq < view.lastSeq) return view;
       return {
         ...view,
         job: action.job,
         status: action.job.status,
         error: action.job.error,
         diffs: view.diffs.length ? view.diffs : (action.job.result?.diffs ?? []),
+        lastSeq: Math.max(view.lastSeq, action.seq ?? 0),
       };
+    }
     case "connected":
       return { ...view, connected: action.connected };
     case "event": {
